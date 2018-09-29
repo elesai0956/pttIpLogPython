@@ -8,7 +8,7 @@ user 	 = '1USER'.encode('big5')
 #1USER改自己帳號
 password = 'PASSWORD'.encode('big5')
 #PASSWORD改自己密碼
-testTime = 3
+testTime = 12
 #testTime 單位是小時
 
 class User:
@@ -25,7 +25,7 @@ starttimeC = time.time()
 
 
 
-print('--start ',starttime)
+print('開始時間: ',starttime)
 host = 'ptt.cc'
 
 target_list = []
@@ -56,65 +56,71 @@ target_list.append(User('newAC'.encode('big5')))
 target_list.append(User('gogoPro'.encode('big5')))
 target_list.append(User('namiO'.encode('big5')))
 target_list.append(User('ISPNet'.encode('big5')))
-
+target_list.append(User('ECBQE'.encode('big5')))
+target_list.append(User('Lucify'.encode('big5')))
+target_list.append(User('FMarine'.encode('big5')))
 
 # create objs(target_list)
+telnet=''
+nottimeout=True
 
 for target in target_list:
-    print(target)
+    print(target.name)
     
-
-telnet = telnetlib.Telnet(host)
-time.sleep(2)
-
-content = telnet.read_very_eager().decode('big5', 'ignore')
-# print(content)
-print('--login')
-
-if u"系統過載" in content:
-	print('系統過載, 請稍後再來')
-	sys.exit(0)
-
-if u"請輸入代號" in content:
-	print('輸入帳號中...')
-	telnet.write(user + b"\r\n")
-	print('輸入密碼中...')
-	telnet.write(password + b"\r\n")
-	time.sleep(2)
+def logging():
+    global telnet
+    telnet = telnetlib.Telnet(host)
+    time.sleep(2)
 	
-content = telnet.read_very_eager().decode('big5', 'ignore')
+    content = telnet.read_very_eager().decode('big5', 'ignore')
+    #print(content)
+    print('--login')
+	
+    if u"系統過載" in content:
+        print('系統過載, 請稍後再來')
+        sys.exit(0)
 
-if u"請按任意鍵繼續" in content:
-    print("資訊頁面，按任意鍵繼續...")
-    telnet.write(b"\r\n")
-    time.sleep(2)
-if u"密碼不對" in content:
-    print("密碼不對或無此帳號。程式結束")
-    sys.exit()
-if u"您想刪除其他重複登入" in content:
-    print("刪除其他重複登入的連線....")
-    telnet.write(b"y\r\n")
-    time.sleep(5)
-if u"您要刪除以上錯誤嘗試" in content:
-    print("刪除以上錯誤嘗試...")
-    telnet.write(b"y\r\n")
-    time.sleep(2)
-if u"您有一篇文章尚未完成" in content:
-    print('刪除尚未完成的文章....')
-    # 放棄尚未編輯完的文章
-    telnet.write(b"q\r\n")
-    time.sleep(2)
+    if u"請輸入代號" in content:
+        print('輸入帳號中...')
+        telnet.write(user + b"\r\n")
+        print('輸入密碼中...')
+        telnet.write(password + b"\r\n")
+        time.sleep(2)
+		
+    content = telnet.read_very_eager().decode('big5', 'ignore')
+	
+    if u"請按任意鍵繼續" in content:
+        print("資訊頁面，按任意鍵繼續...")
+        telnet.write(b"\r\n")
+        time.sleep(2)
+    if u"密碼不對" in content:
+        print("密碼不對或無此帳號。程式結束")
+        sys.exit()
+    if u"您想刪除其他重複登入" in content:
+        print("刪除其他重複登入的連線....")
+        telnet.write(b"y\r\n")
+        time.sleep(5)
+    if u"您要刪除以上錯誤嘗試" in content:
+        print("刪除以上錯誤嘗試...")
+        telnet.write(b"y\r\n")
+        time.sleep(2)
+    if u"您有一篇文章尚未完成" in content:
+        print('刪除尚未完成的文章....')	
+        telnet.write(b"q\r\n")
+        time.sleep(2)
 
-time.sleep(2)
-content = telnet.read_very_eager().decode('big5', 'ignore')
-if u"休閒聊天區" in content:
-    print("now in 主功能表 enter 休閒聊天區")
-    telnet.write(b"t\r\n")
-time.sleep(2)
-
-def checkip(target):
     time.sleep(2)
     content = telnet.read_very_eager().decode('big5', 'ignore')
+    if u"休閒聊天區" in content:
+        print("now in 主功能表 enter 休閒聊天區")
+        telnet.write(b"t\r\n")
+        time.sleep(2)
+
+def checkip(target):
+    global telnet
+    time.sleep(2)
+    content = telnet.read_very_eager().decode('big5', 'ignore')
+    #print(content)
     if u"聊天說話" in content:
         print("now in 聊天說話 enter 查詢網友")
         telnet.write(b"q\r\n")
@@ -155,30 +161,37 @@ def checkip(target):
             print('tmpStr::',tmpStr)
             file.close()
             tmpip=tmpStr.split(',')[-1]
-            print('tmpip::',tmpip)
+            print('ip::',tmpip)
             target.ip=tmpip
             for ipA in target_list:
                 if ipA.ip==tmpip and ipA.name !=target.name:
                     print('FUCKING SAME IP',ipA.name,target.name,ipA.ip)
         else:
              print(target.name,"::same content")
-# parse(content)
+
         telnet.write(b"\r\n")
         print('回到聊天說話')
         time.sleep(2)
-
-while True:
-  endttimeC = time.time()
-  print(starttimeC,endttimeC,endttimeC-starttimeC,testTime*60*60)
- 
-  for target in target_list:
-        checkip(target) 
-  if endttimeC-starttimeC > testTime*60*60:
-    break
+		
+logging()		
+while nottimeout:   
+    try:        
+        while nottimeout:                       
+            endttimeC = time.time()
+            print(time.strftime('%Y-%m-%d-%H-%M-%S'),',剩餘時間:',str(datetime.timedelta(seconds=testTime*60*60-(endttimeC-starttimeC))))
+            for target in target_list:
+                  checkip(target)
+                  if endttimeC-starttimeC > testTime*60*60:
+                      nottimeout = False
+                      break
+    except:
+        time.sleep(15)
+        logging()
 
 time.sleep(2)
 telnet.close()
 print('--telnet close')
+print('結束時間:',time.strftime('%Y-%m-%d-%H-%M-%S'))
 print('--finish')
 sys.exit()
 
